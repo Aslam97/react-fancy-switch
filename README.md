@@ -1,28 +1,36 @@
-<a href="https://shadcn-fancy-switch.vercel.app" target="_blank">
-  <img src="https://i.imghippo.com/files/AS1uu1720799823.png" alt="React Fancy Switch" />
+## React Fancy Switch
+
+<a href='https://react-fancy-radio.vercel.app/' target='_blank'>
+  <img src='https://i.postimg.cc/LJKS06Pr/Screenshot-2024-08-13-at-16-18-48.png' border='0' alt="React Fancy Switch" />
 </a>
 
 Simple Fancy Switch Component without framer-motion.
 
-## Installation
+### Installation
 
-Copy the `src/components/fancy-switch` directory and paste into your project and customize to your needs. The code is yours.
+To install the package using npm, run the following command:
+
+```bash
+npm install @omit/react-fancy-switch
+```
+
+### shadcn/ui
+
+If you use shadcn/ui, There an example of how to use the
+`FancySwitch` component. The component is located at `website/src/components/custom/fancy-switch.tsx.tsx`.
 
 ## Usage
+
+### Basic Usage
 
 ```tsx
 import React, { useState } from 'react'
 import { FancySwitch } from '@/components/fancy-switch'
 
 const orderTypes: string[] = ['Delivery', 'Pickup', 'Shipping']
-const pets: { text: string; id: number }[] = [
-  { text: 'Car, (AKA Cat)', id: 1 },
-  { text: 'Dog', id: 2 }
-]
 
 export const App = () => {
   const [orderType, setOrderType] = useState<string>()
-  const [pet, setPet] = useState<string>()
 
   return (
     <FancySwitch
@@ -36,22 +44,13 @@ export const App = () => {
       )}
       highlighterIncludeMargin={true}
     />
-
-    <FancySwitch
-      value={pet}
-      onChange={(value) => setPet(value)}
-      options={pets}
-      valueKey="id"
-      labelKey="text"
-      className="rounded-3xl bg-muted p-2"
-      highlighterClassName="bg-primary rounded-full"
-      radioClassName={cn(
-        'relative mx-2 flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground'
-      )}
-    />
   )
 }
 ```
+
+### react-hook-form
+
+If you are using `react-hook-form` you can see the example in the `website/src/App.tsx` file.
 
 ## Props
 
@@ -61,17 +60,21 @@ interface FancySwitchProps {
   value: string | number | undefined
 
   // optional
-  onChange: value: string | number
+  onChange: (value: string | number) => void
 
   options: (string | number | object)[]
 
   // optional
-  valueKey: string // default: 'value'
-  labelKey: string // default: 'label'
+  valueKey?: string // default: 'value'
+  labelKey?: string // default: 'label'
 
   // optional
-  radioClassName: string
-  highlighterClassName: string
-  highlighterIncludeMargin: boolean
+  radioClassName?: string
+  highlighterClassName?: string
+  highlighterIncludeMargin?: boolean
 }
 ```
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
