@@ -1,18 +1,19 @@
 {
-  "name": "fancy-switch",
-  "version": "1.0.0",
-  "private": false,
+  "name": "root",
+  "private": true,
   "scripts": {
-    "dev": "pnpm --filter website dev",
-    "build:website": "pnpm --filter website build",
-    "build:lib": "pnpm --filter packages/react-fancy-switch build",
-    "build": "pnpm build:website && pnpm build:lib"
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
-  "keywords": [
-    "react",
-    "switch",
-    "fancy",
-    "radio",
-    "toggle"
-  ]
+  "packageManager": "pnpm@8.15.6",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "turbo": "^2.0.12",
+    "typescript": "^5.5.4"
+  }
 }
