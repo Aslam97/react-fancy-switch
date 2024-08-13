@@ -1,8 +1,8 @@
-## React Fancy Switch
-
 <a href='https://react-fancy-radio.vercel.app/' target='_blank'>
-  <img src='https://i.postimg.cc/BntvbjnQ/Screenshot-2024-08-13-at-16-18-48.png' border='0' alt="React Fancy Switch" />
+  <img src='https://i.postimg.cc/59Bc5bR5/Screenshot-2024-08-13-at-16-33-21.png' border='0' alt="React Fancy Switch" />
 </a>
+
+## React Fancy Switch
 
 Simple Fancy Switch Component without framer-motion.
 
