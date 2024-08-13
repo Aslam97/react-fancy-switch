@@ -49,7 +49,7 @@ function App() {
   }
 
   return (
-    <div className="flex min-h-screen place-items-center justify-center bg-white p-4">
+    <div className="flex min-h-screen place-items-center justify-center p-4">
       <div className="mx-auto max-w-4xl">
         <div className="text-center">
           <h1 className="text-xl font-bold tracking-tight sm:text-3xl">
