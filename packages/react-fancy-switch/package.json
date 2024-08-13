@@ -1,0 +1,66 @@
+{
+  "name": "@omit/react-fancy-switch",
+  "private": false,
+  "version": "0.0.1",
+  "type": "module",
+  "license": "MIT",
+  "description": "A fancy switch component",
+  "author": {
+    "name": "Aslam H",
+    "email": "iupin5212@gmail.com"
+  },
+  "homepage": "https://github.com/Aslam97/react-fancy-radio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Aslam97/react-fancy-radio.git"
+  },
+  "keywords": [
+    "react",
+    "switch",
+    "fancy",
+    "radio",
+    "toggle"
+  ],
+  "main": "./dist/react-fancy-switch.umd.cjs",
+  "module": "./dist/react-fancy-switch.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/react-fancy-switch.js",
+      "require": "./dist/react-fancy-switch.umd.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@types/node": "^22.2.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "5.1.0-rc-fb9a90fa48-20240614",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "globals": "^15.9.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.1.0",
+    "vite": "^5.4.0",
+    "vite-plugin-dts": "^4.0.2"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
