@@ -12,7 +12,7 @@
   "homepage": "https://github.com/Aslam97/react-fancy-radio",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Aslam97/react-fancy-radio.git"
+    "url": "git+https://github.com/Aslam97/react-fancy-radio.git"
   },
   "keywords": [
     "react",

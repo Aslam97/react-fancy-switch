@@ -1,7 +1,7 @@
 {
   "name": "fancy-switch",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": false,
   "scripts": {
     "dev": "pnpm --filter website dev",
     "build:website": "pnpm --filter website build",
