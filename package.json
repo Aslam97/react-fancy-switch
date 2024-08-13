@@ -12,8 +12,6 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "prettier": "^3.3.3",
-    "turbo": "^2.0.12",
-    "typescript": "^5.5.4"
+    "turbo": "^2.0.12"
   }
 }
