@@ -1,4 +1,4 @@
-import { FancySwitch, OptionValue } from '@omit/react-fancy-switch'
+import { OptionValue } from '@omit/react-fancy-switch'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -11,6 +11,7 @@ import {
   FormMessage
 } from '@/components/ui/form'
 import { cn } from './lib/utils'
+import { FancySwitch } from '@/components/custom/fancy-switch'
 
 const orderTypes: OptionValue[] = ['Delivery', 'Pickup', 'Shipping']
 const options: { label: string; value: number }[] = [
