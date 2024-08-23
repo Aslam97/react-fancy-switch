@@ -106,6 +106,20 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
       }
     }, [activeIndex, highlighterIncludeMargin])
 
+    const getNextOption = React.useCallback(
+      (currentIndex: number) => {
+        return (currentIndex + 1) % options.length
+      },
+      [options.length]
+    )
+
+    const getPreviousOption = React.useCallback(
+      (currentIndex: number) => {
+        return (currentIndex - 1 + options.length) % options.length
+      },
+      [options.length]
+    )
+
     const handleChange = React.useCallback(
       (index: number) => {
         radioRefs.current[index]?.focus()
@@ -115,33 +129,25 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
       [memoizedOptions, onChange]
     )
 
-    const handleKeyDown = (
-      event: React.KeyboardEvent<HTMLDivElement>,
-      index: number
-    ) => {
-      switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowRight':
-          event.preventDefault()
-          handleChange(getNextOption(index))
-          break
-        case 'ArrowUp':
-        case 'ArrowLeft':
-          event.preventDefault()
-          handleChange(getPreviousOption(index))
-          break
-        default:
-          break
-      }
-    }
-
-    const getNextOption = (currentIndex: number) => {
-      return (currentIndex + 1) % options.length
-    }
-
-    const getPreviousOption = (currentIndex: number) => {
-      return (currentIndex - 1 + options.length) % options.length
-    }
+    const handleKeyDown = React.useCallback(
+      (event: React.KeyboardEvent<HTMLDivElement>, index: number) => {
+        switch (event.key) {
+          case 'ArrowDown':
+          case 'ArrowRight':
+            event.preventDefault()
+            handleChange(getNextOption(index))
+            break
+          case 'ArrowUp':
+          case 'ArrowLeft':
+            event.preventDefault()
+            handleChange(getPreviousOption(index))
+            break
+          default:
+            break
+        }
+      },
+      [handleChange, getNextOption, getPreviousOption]
+    )
 
     React.useImperativeHandle(ref, () => containerRef.current as HTMLDivElement)
 

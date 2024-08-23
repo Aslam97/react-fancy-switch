@@ -12,11 +12,12 @@ import {
 } from '@/components/ui/form'
 import { cn } from './lib/utils'
 import { FancySwitch } from '@/components/custom/fancy-switch'
+import { useEffect } from 'react'
 
 const orderTypes: OptionValue[] = ['Delivery', 'Pickup', 'Shipping']
-const options: { label: string; value: number }[] = [
-  { label: 'Publish', value: 1 },
-  { label: 'Draft', value: 0 }
+const options = [
+  { label: 'Publish', value: 1, test: 'H' },
+  { label: 'Draft', value: 0, test: 'U' }
 ]
 const pets: { text: string; id: number }[] = [
   { text: 'Car, (AKA Cat)', id: 1 },
@@ -47,6 +48,17 @@ function App() {
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
     console.log(data)
   }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        console.log('ArrowUp/ArrowDown')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
     <div className="flex min-h-screen place-items-center justify-center p-4">
