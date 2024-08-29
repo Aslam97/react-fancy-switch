@@ -2,78 +2,165 @@
   <img src='https://i.postimg.cc/59Bc5bR5/Screenshot-2024-08-13-at-16-33-21.png' border='0' alt="React Fancy Switch" />
 </a>
 
-## React Fancy Switch
+# React Fancy Switch
 
-Simple Fancy Switch Component without framer-motion.
+Simple React Fancy Switch Component without framer-motion. its customizable component that provides an elegant and interactive way to switch between multiple options. It's designed to be flexible, accessible, and easy to integrate into your React applications.
 
-### Installation
+## Features
 
-To install the package using npm, run the following command:
+- Supports both string and object-based options
+- Customizable styling for radio buttons and highlighter
+- Keyboard navigation support
+- Accessible design with proper ARIA attributes
+- Smooth transition effects
+
+## Installation
+
+To use FancySwitch in your project, you can install it via npm:
 
 ```bash
 npm install @omit/react-fancy-switch
 ```
 
-### shadcn/ui
-
-If you use shadcn/ui, There an example of how to use the
-`FancySwitch` component. The component is located at `website/src/components/custom/fancy-switch.tsx.tsx`.
-
 ## Usage
 
-### Basic Usage
+Here are examples of how to use the FancySwitch component with different types of option arrays:
 
-```tsx
+### 1. Array of Strings
+
+```jsx
 import React, { useState } from 'react'
-import { FancySwitch } from '@/components/fancy-switch'
+import FancySwitch from 'fancy-switch'
 
-const orderTypes: string[] = ['Delivery', 'Pickup', 'Shipping']
+const StringExample = () => {
+  const [selectedOption, setSelectedOption] = useState('apple')
 
-export const App = () => {
-  const [orderType, setOrderType] = useState<string>()
+  const options = ['apple', 'banana', 'cherry']
 
   return (
     <FancySwitch
-      value={orderType}
-      onChange={(value) => setOrderType(value)}
-      options={orderTypes}
-      className="flex rounded-full bg-muted p-2"
-      highlighterClassName="bg-primary rounded-full"
-      radioClassName={cn(
-        'relative mx-2 flex focus:outline-none h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground'
-      )}
-      highlighterIncludeMargin={true}
+      options={options}
+      value={selectedOption}
+      onChange={setSelectedOption}
+      className="some-class"
+      radioClassName="radio-button"
+      highlighterClassName="highlighter"
     />
   )
 }
 ```
 
-### react-hook-form
+### 2. Array of Objects (Default Keys)
 
-If you are using `react-hook-form` you can see the example in the `website/src/App.tsx` file.
+```jsx
+import React, { useState } from 'react'
+import FancySwitch from 'fancy-switch'
 
-## Props
+const DefaultObjectExample = () => {
+  const [selectedOption, setSelectedOption] = useState('option1')
 
-```ts
-interface FancySwitchProps {
-  // optional
-  value: string | number | undefined
+  const options = [
+    { value: 'option1', label: 'Option 1' },
+    { value: 'option2', label: 'Option 2' },
+    { value: 'option3', label: 'Option 3' }
+  ]
 
-  // optional
-  onChange: (value: string | number) => void
-
-  options: (string | number | object)[]
-
-  // optional
-  valueKey?: string // default: 'value'
-  labelKey?: string // default: 'label'
-
-  // optional
-  radioClassName?: string
-  highlighterClassName?: string
-  highlighterIncludeMargin?: boolean
+  return (
+    <FancySwitch
+      options={options}
+      value={selectedOption}
+      onChange={setSelectedOption}
+      radioClassName="radio-button"
+      highlighterClassName="highlighter"
+    />
+  )
 }
 ```
+
+### 3. Array of Objects (Custom Keys)
+
+```jsx
+import React, { useState } from 'react'
+import FancySwitch from 'fancy-switch'
+
+const CustomObjectExample = () => {
+  const [selectedOption, setSelectedOption] = useState(1)
+
+  const options = [
+    { id: 1, name: 'First Choice' },
+    { id: 2, name: 'Second Choice' },
+    { id: 3, name: 'Third Choice' }
+  ]
+
+  return (
+    <FancySwitch
+      options={options}
+      value={selectedOption}
+      onChange={setSelectedOption}
+      valueKey="id"
+      labelKey="name"
+      radioClassName="radio-button"
+      highlighterClassName="highlighter"
+    />
+  )
+}
+```
+
+## API
+
+### Props
+
+| Prop                       | Type                           | Default   | Description                                                      |
+| -------------------------- | ------------------------------ | --------- | ---------------------------------------------------------------- |
+| `options`                  | `OptionType[]`                 | Required  | An array of options to display. Can be strings or objects.       |
+| `value`                    | `OptionValue`                  | -         | The currently selected value.                                    |
+| `onChange`                 | `(value: OptionValue) => void` | -         | Callback function called when the selection changes.             |
+| `valueKey`                 | `string`                       | `'value'` | The key to use for the option's value when using object options. |
+| `labelKey`                 | `string`                       | `'label'` | The key to use for the option's label when using object options. |
+| `radioClassName`           | `string`                       | -         | CSS class name for the radio button elements.                    |
+| `highlighterClassName`     | `string`                       | -         | CSS class name for the highlighter element.                      |
+| `highlighterIncludeMargin` | `boolean`                      | `false`   | Whether to include margins in highlighter size calculations.     |
+
+Additional HTML attributes for the container div can be passed as props and will be spread onto the root element.
+
+### Types
+
+```typescript
+type OptionValue = string | number
+interface OptionObject {
+  [key: string]: OptionValue
+}
+type OptionType = OptionValue | OptionObject
+```
+
+## Styling
+
+The FancySwitch component provides CSS class hooks for styling:
+
+- Use the `className` prop to style the container div.
+- Use the `radioClassName` prop to style individual radio button elements.
+- Use the `highlighterClassName` prop to style the moving highlighter element.
+
+Example:
+
+```tsx
+<FancySwitch
+  className="flex rounded-full bg-muted p-2"
+  highlighterClassName="bg-primary rounded-full"
+  radioClassName={cn(
+    'relative mx-2 flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground'
+  )}
+  highlighterIncludeMargin={true}
+/>
+```
+
+## Accessibility
+
+FancySwitch is built with accessibility in mind:
+
+- Proper `role` and `aria-` attributes are used.
+- Keyboard navigation is supported (arrow keys to move between options).
+- Focus management is handled automatically.
 
 ## Other Projects
 
