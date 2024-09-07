@@ -49,14 +49,6 @@ function App() {
     console.log(data)
   }
 
-  // wait 2 second, and change orderType to 'Shipping'
-  useEffect(() => {
-    setTimeout(() => {
-      form.setValue('orderType', 'Shipping')
-      console.log('orderType changed to Shipping')
-    }, 2000)
-  }, [form])
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
