@@ -39,7 +39,7 @@ function App() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      orderType: 'Delivery',
+      orderType: 'Pickup',
       isPublished: 0,
       pet: 1
     }
@@ -48,6 +48,14 @@ function App() {
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
     console.log(data)
   }
+
+  // wait 2 second, and change orderType to 'Shipping'
+  useEffect(() => {
+    setTimeout(() => {
+      form.setValue('orderType', 'Shipping')
+      console.log('orderType changed to Shipping')
+    }, 2000)
+  }, [form])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -99,6 +107,7 @@ function App() {
                       data-testid="orderType"
                       className="flex rounded-full bg-muted p-2"
                       highlighterClassName="bg-primary rounded-full"
+                      aria-label="Order type"
                       radioClassName={cn(
                         'relative mx-2 flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground'
                       )}

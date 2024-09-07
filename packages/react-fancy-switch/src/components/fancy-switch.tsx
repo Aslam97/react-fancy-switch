@@ -1,5 +1,10 @@
 import * as React from 'react'
-import { FancySwitchProps, OptionObject, OptionType } from '../types'
+import {
+  FancySwitchProps,
+  OptionObject,
+  OptionType,
+  OptionValue
+} from '../types'
 
 export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
   (
@@ -17,18 +22,22 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
     ref
   ) => {
     const getOptionValue = React.useCallback(
-      (option: OptionType) =>
-        typeof option === 'string'
-          ? option
-          : (option as OptionObject)[valueKey],
+      (option: OptionType): OptionValue => {
+        if (typeof option === 'string' || typeof option === 'number') {
+          return option
+        }
+        return (option as OptionObject)[valueKey] as OptionValue
+      },
       [valueKey]
     )
 
     const getOptionLabel = React.useCallback(
-      (option: OptionType) =>
-        typeof option === 'string'
-          ? option
-          : (option as OptionObject)[labelKey],
+      (option: OptionType): string => {
+        if (typeof option === 'string' || typeof option === 'number') {
+          return String(option)
+        }
+        return String((option as OptionObject)[labelKey])
+      },
       [labelKey]
     )
 
@@ -41,9 +50,27 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
       [options, getOptionValue, getOptionLabel]
     )
 
-    const [activeIndex, setActiveIndex] = React.useState(() =>
-      memoizedOptions.findIndex((option) => option.value === value)
-    )
+    const [activeIndex, setActiveIndex] = React.useState(() => {
+      const index = memoizedOptions.findIndex(
+        (option) => option.value === value
+      )
+      if (index === -1) {
+        console.warn(
+          `FancySwitch: No option found for value "${value}". Defaulting to first option.`
+        )
+        return 0
+      }
+      return index
+    })
+
+    React.useEffect(() => {
+      const newIndex = memoizedOptions.findIndex(
+        (option) => option.value === value
+      )
+      if (newIndex !== -1 && newIndex !== activeIndex) {
+        setActiveIndex(newIndex)
+      }
+    }, [value, memoizedOptions, activeIndex])
 
     const [highlighterStyle, setHighlighterStyle] = React.useState({
       height: 0,
@@ -158,7 +185,7 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
     return (
       <div
         role="radiogroup"
-        aria-labelledby="fancy-switch-label"
+        aria-label="Fancy Switch Options"
         {...props}
         ref={containerRef}
       >
@@ -186,10 +213,28 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={radioClassName}
             {...(index === activeIndex ? { 'data-checked': true } : {})}
+            aria-label={`${option.label} option`}
           >
             {option.label}
           </div>
         ))}
+
+        <div
+          aria-live="polite"
+          style={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            padding: 0,
+            margin: '-1px',
+            overflow: 'hidden',
+            clip: 'rect(0, 0, 0, 0)',
+            whiteSpace: 'nowrap',
+            borderWidth: 0
+          }}
+        >
+          {memoizedOptions[activeIndex]?.label} selected
+        </div>
       </div>
     )
   }
