@@ -30,7 +30,7 @@ Here are examples of how to use the FancySwitch component with different types o
 
 ```jsx
 import React, { useState } from 'react'
-import FancySwitch from 'fancy-switch'
+import FancySwitch from '@omit/react-fancy-switch'
 
 const StringExample = () => {
   const [selectedOption, setSelectedOption] = useState('apple')
@@ -54,7 +54,7 @@ const StringExample = () => {
 
 ```jsx
 import React, { useState } from 'react'
-import FancySwitch from 'fancy-switch'
+import FancySwitch from '@omit/react-fancy-switch'
 
 const DefaultObjectExample = () => {
   const [selectedOption, setSelectedOption] = useState('option1')
@@ -81,7 +81,7 @@ const DefaultObjectExample = () => {
 
 ```jsx
 import React, { useState } from 'react'
-import FancySwitch from 'fancy-switch'
+import FancySwitch from '@omit/react-fancy-switch'
 
 const CustomObjectExample = () => {
   const [selectedOption, setSelectedOption] = useState(1)
