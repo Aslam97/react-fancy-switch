@@ -157,17 +157,22 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
     )
 
     const handleKeyDown = React.useCallback(
-      (event: React.KeyboardEvent<HTMLDivElement>, index: number) => {
+      (event: React.KeyboardEvent<HTMLDivElement>) => {
+        const currentIndex = radioRefs.current.findIndex(
+          (ref) => ref === document.activeElement
+        )
+        if (currentIndex === -1) return
+
         switch (event.key) {
           case 'ArrowDown':
           case 'ArrowRight':
             event.preventDefault()
-            handleChange(getNextOption(index))
+            handleChange(getNextOption(currentIndex))
             break
           case 'ArrowUp':
           case 'ArrowLeft':
             event.preventDefault()
-            handleChange(getPreviousOption(index))
+            handleChange(getPreviousOption(currentIndex))
             break
           default:
             break
@@ -188,6 +193,7 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
         aria-label="Fancy Switch Options"
         {...props}
         ref={containerRef}
+        onKeyDown={handleKeyDown}
       >
         <div
           className={highlighterClassName}
@@ -210,7 +216,6 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
             aria-checked={index === activeIndex}
             tabIndex={index === activeIndex ? 0 : -1}
             onClick={() => handleChange(index)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
             className={radioClassName}
             {...(index === activeIndex ? { 'data-checked': true } : {})}
             aria-label={`${option.label} option`}
