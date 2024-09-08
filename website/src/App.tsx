@@ -94,7 +94,10 @@ function App() {
                   </FormLabel>
                   <FormControl>
                     <FancySwitch
-                      {...field}
+                      value={field.value}
+                      onChange={(value) =>
+                        form.setValue('orderType', String(value))
+                      }
                       options={orderTypes}
                       data-testid="orderType"
                       className="flex rounded-full bg-muted p-2"
@@ -121,7 +124,8 @@ function App() {
                   </FormLabel>
                   <FormControl>
                     <FancySwitch
-                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
                       options={options}
                       className="rounded-xl bg-muted p-2"
                       highlighterClassName="bg-primary rounded-xl"
@@ -149,7 +153,8 @@ function App() {
                   </FormLabel>
                   <FormControl>
                     <FancySwitch
-                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
                       options={pets}
                       valueKey="id"
                       labelKey="text"
