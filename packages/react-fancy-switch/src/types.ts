@@ -18,4 +18,5 @@ export interface FancySwitchProps
   radioClassName?: string
   highlighterClassName?: string
   highlighterIncludeMargin?: boolean
+  highlighterStyle?: React.CSSProperties
 }

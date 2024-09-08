@@ -17,6 +17,7 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
       radioClassName,
       highlighterClassName,
       highlighterIncludeMargin = false,
+      highlighterStyle: customHighlighterStyle,
       ...props
     },
     ref
@@ -156,32 +157,21 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
       [memoizedOptions, onChange]
     )
 
-    const handleKeyDown = React.useCallback(
-      (event: React.KeyboardEvent<HTMLDivElement>) => {
-        const currentIndex = radioRefs.current.findIndex(
-          (ref) => ref === document.activeElement
-        )
-        if (currentIndex === -1) return
+    const goToNext = React.useCallback(() => {
+      const nextIndex = getNextOption(activeIndex)
+      handleChange(nextIndex)
+    }, [activeIndex, getNextOption, handleChange])
 
-        switch (event.key) {
-          case 'ArrowDown':
-          case 'ArrowRight':
-            event.preventDefault()
-            handleChange(getNextOption(currentIndex))
-            break
-          case 'ArrowUp':
-          case 'ArrowLeft':
-            event.preventDefault()
-            handleChange(getPreviousOption(currentIndex))
-            break
-          default:
-            break
-        }
-      },
-      [handleChange, getNextOption, getPreviousOption]
+    const goToPrevious = React.useCallback(() => {
+      const prevIndex = getPreviousOption(activeIndex)
+      handleChange(prevIndex)
+    }, [activeIndex, getPreviousOption, handleChange])
+
+    React.useImperativeHandle(
+      ref,
+      () => containerRef.current as HTMLDivElement,
+      []
     )
-
-    React.useImperativeHandle(ref, () => containerRef.current as HTMLDivElement)
 
     React.useEffect(() => {
       updateToggle()
@@ -190,10 +180,34 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
     return (
       <div
         role="radiogroup"
-        aria-label="Fancy Switch Options"
+        aria-label="Fancy switch options"
         {...props}
         ref={containerRef}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => {
+          props.onKeyDown?.(e)
+
+          const currentIndex = radioRefs.current.findIndex(
+            (ref) => ref === document.activeElement
+          )
+          if (currentIndex === -1) return
+
+          if (!e.defaultPrevented) {
+            switch (e.key) {
+              case 'ArrowDown':
+              case 'ArrowRight':
+                e.preventDefault()
+                goToNext()
+                break
+              case 'ArrowUp':
+              case 'ArrowLeft':
+                e.preventDefault()
+                goToPrevious()
+                break
+              default:
+                break
+            }
+          }
+        }}
       >
         <div
           className={highlighterClassName}
@@ -202,7 +216,8 @@ export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
             transitionProperty: 'all',
             transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
             transitionDuration: '300ms',
-            ...highlighterStyle
+            ...highlighterStyle,
+            ...customHighlighterStyle
           }}
           aria-hidden="true"
           data-highlighter
