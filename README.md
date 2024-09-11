@@ -2,6 +2,13 @@
   <img src='https://i.postimg.cc/59Bc5bR5/Screenshot-2024-08-13-at-16-33-21.png' border='0' alt="React Fancy Switch" />
 </a>
 
+<p style={{ textAlign: 'center' }}>
+<a href="https://github.com/umodoc/editor/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/npm/l/%40omit%2Freact-fancy-switch" /></a>
+<a href="https://www.npmjs.com/package/@omit/react-fancy-switch" target="_blank"><img src="https://img.shields.io/npm/v/%40omit%2Freact-fancy-switch" /></a>
+<a href="https://www.npmjs.com/package/@omit/react-fancy-switch" target="_blank"><img src="https://img.shields.io/npm/dw/%40omit%2Freact-fancy-switch" /></a>
+<a href="https://github.com/umodoc/editor/commits" target="_blank"><img src="https://img.shields.io/npm/unpacked-size/%40omit%2Freact-fancy-switch" /></a>
+</p>
+
 # React Fancy Switch
 
 Simple React Fancy Switch Component without framer-motion. its customizable component that provides an elegant and interactive way to switch between multiple options. It's designed to be flexible, accessible, and easy to integrate into your React applications.
