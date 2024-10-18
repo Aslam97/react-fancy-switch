@@ -15,8 +15,8 @@ import { useEffect } from 'react'
 
 const orderTypes = ['Delivery', 'Pickup', 'Shipping']
 const options = [
-  { label: 'Publish', value: 1, test: 'H', hentikan: false },
-  { label: 'Draft', value: 0, test: 'U', hentikan: true }
+  { label: 'Publish', value: 1, test: 'H' },
+  { label: 'Draft', value: 0, test: 'U' }
 ]
 const pets = [
   { text: 'Car, (AKA Cat)', id: 1 },
@@ -100,7 +100,6 @@ function App() {
                       className="flex rounded-full bg-muted p-2"
                       highlighterClassName="bg-primary rounded-full"
                       aria-label="Order type"
-                      disabledOptions={['Shipping']}
                       radioClassName={cn(
                         'relative mx-2 flex h-9 cursor-pointer items-center justify-center',
                         'rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground',
@@ -127,7 +126,6 @@ function App() {
                       value={field.value}
                       onChange={field.onChange}
                       options={options}
-                      disabledKey="hentikan"
                       className="rounded-xl bg-muted p-2"
                       highlighterClassName="bg-primary rounded-xl"
                       radioClassName={cn(
