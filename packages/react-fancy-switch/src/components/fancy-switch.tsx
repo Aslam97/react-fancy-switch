@@ -6,259 +6,265 @@ import {
   OptionValue
 } from '../types'
 
-export const FancySwitch = React.forwardRef<HTMLDivElement, FancySwitchProps>(
-  (
-    {
-      options,
-      valueKey = 'value',
-      labelKey = 'label',
-      value,
-      onChange,
-      radioClassName,
-      highlighterClassName,
-      highlighterIncludeMargin = false,
-      highlighterStyle: customHighlighterStyle,
-      ...props
+export function FancySwitch<T extends OptionType>({
+  options,
+  valueKey = 'value' as keyof T & string,
+  labelKey = 'label' as keyof T & string,
+  disabledKey = 'disabled' as keyof T & string,
+  value,
+  onChange,
+  radioClassName,
+  highlighterClassName,
+  highlighterIncludeMargin = false,
+  highlighterStyle: customHighlighterStyle,
+  disabledOptions = [],
+  ...props
+}: FancySwitchProps<T>) {
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const radioRefs = React.useRef<(HTMLDivElement | null)[]>([])
+
+  const getOptionValue = React.useCallback(
+    (option: T): OptionValue => {
+      if (typeof option !== 'object') {
+        return option
+      }
+      return option[valueKey] as OptionValue
     },
-    ref
-  ) => {
-    const getOptionValue = React.useCallback(
-      (option: OptionType): OptionValue => {
-        if (typeof option === 'string' || typeof option === 'number') {
-          return option
-        }
-        return (option as OptionObject)[valueKey] as OptionValue
-      },
-      [valueKey]
-    )
+    [valueKey]
+  )
 
-    const getOptionLabel = React.useCallback(
-      (option: OptionType): string => {
-        if (typeof option === 'string' || typeof option === 'number') {
-          return String(option)
-        }
-        return String((option as OptionObject)[labelKey])
-      },
-      [labelKey]
-    )
+  const getOptionLabel = React.useCallback(
+    (option: T): string => {
+      if (typeof option !== 'object') {
+        return String(option)
+      }
+      return String(option[labelKey])
+    },
+    [labelKey]
+  )
 
-    const memoizedOptions = React.useMemo(
-      () =>
-        options.map((option) => ({
-          label: getOptionLabel(option),
-          value: getOptionValue(option)
-        })),
-      [options, getOptionValue, getOptionLabel]
-    )
-
-    const [activeIndex, setActiveIndex] = React.useState(() => {
-      const index = memoizedOptions.findIndex(
-        (option) => option.value === value
-      )
-      if (index === -1) {
-        console.warn(
-          `FancySwitch: No option found for value "${value}". Defaulting to first option.`
+  const isOptionDisabled = React.useCallback(
+    (option: T): boolean => {
+      const optionValue = getOptionValue(option)
+      if (
+        disabledOptions.includes(
+          optionValue as T extends OptionObject ? T[keyof T] : T
         )
-        return 0
+      ) {
+        return true
       }
-      return index
-    })
+      if (typeof option === 'object' && disabledKey in option) {
+        return Boolean(option[disabledKey])
+      }
+      return false
+    },
+    [disabledOptions, getOptionValue, disabledKey]
+  )
 
-    React.useEffect(() => {
-      const newIndex = memoizedOptions.findIndex(
-        (option) => option.value === value
+  const memoizedOptions = React.useMemo(
+    () =>
+      options.map((option) => ({
+        label: getOptionLabel(option),
+        value: getOptionValue(option),
+        disabled: isOptionDisabled(option)
+      })),
+    [options, getOptionValue, getOptionLabel, isOptionDisabled]
+  )
+
+  const [activeIndex, setActiveIndex] = React.useState(() => {
+    const index = memoizedOptions.findIndex((option) => option.value === value)
+    if (index === -1) {
+      console.warn(
+        `FancySwitch: No option found for value "${value}". Defaulting to first option.`
       )
-      if (newIndex !== -1 && newIndex !== activeIndex) {
-        setActiveIndex(newIndex)
-      }
-    }, [value, memoizedOptions, activeIndex])
+      return 0
+    }
+    return index
+  })
 
-    const [highlighterStyle, setHighlighterStyle] = React.useState({
-      height: 0,
-      width: 0,
-      transform: 'translate(0, 0)'
-    })
-
-    const containerRef = React.useRef<HTMLDivElement>(null)
-    const radioRefs = React.useRef<(HTMLDivElement | null)[]>([])
-
-    const updateToggle = React.useCallback(() => {
-      const selectedElement = radioRefs.current[activeIndex]
-      const container = containerRef.current
-
-      if (selectedElement && container) {
-        const containerRect = container.getBoundingClientRect()
-        const selectedRect = selectedElement.getBoundingClientRect()
-
-        const containerStyle = window.getComputedStyle(container)
-        const selectedStyle = window.getComputedStyle(selectedElement)
-
-        const containerPadding = {
-          left: parseFloat(containerStyle.paddingLeft),
-          top: parseFloat(containerStyle.paddingTop)
-        }
-        const containerBorder = {
-          left: parseFloat(containerStyle.borderLeftWidth),
-          top: parseFloat(containerStyle.borderTopWidth)
-        }
-        const selectedMargin = {
-          left: parseFloat(selectedStyle.marginLeft),
-          right: parseFloat(selectedStyle.marginRight),
-          top: parseFloat(selectedStyle.marginTop),
-          bottom: parseFloat(selectedStyle.marginBottom)
-        }
-
-        const translateX =
-          selectedRect.left -
-          containerRect.left -
-          containerPadding.left -
-          containerBorder.left -
-          (highlighterIncludeMargin ? selectedMargin.left : 0)
-
-        const translateY =
-          selectedRect.top -
-          containerRect.top -
-          containerPadding.top -
-          containerBorder.top -
-          selectedMargin.top
-
-        setHighlighterStyle({
-          height: selectedRect.height,
-          width:
-            selectedRect.width +
-            (highlighterIncludeMargin
-              ? selectedMargin.left + selectedMargin.right
-              : 0),
-          transform: `translate(${translateX}px, ${translateY}px)`
-        })
-      }
-    }, [activeIndex, highlighterIncludeMargin])
-
-    const getNextOption = React.useCallback(
-      (currentIndex: number) => {
-        return (currentIndex + 1) % options.length
-      },
-      [options.length]
+  React.useEffect(() => {
+    const newIndex = memoizedOptions.findIndex(
+      (option) => option.value === value
     )
+    if (newIndex !== -1 && newIndex !== activeIndex) {
+      setActiveIndex(newIndex)
+    }
+  }, [value, memoizedOptions, activeIndex])
 
-    const getPreviousOption = React.useCallback(
-      (currentIndex: number) => {
-        return (currentIndex - 1 + options.length) % options.length
-      },
-      [options.length]
-    )
+  const [highlighterStyle, setHighlighterStyle] = React.useState({
+    height: 0,
+    width: 0,
+    transform: 'translate(0, 0)'
+  })
 
-    const handleChange = React.useCallback(
-      (index: number) => {
+  const updateToggle = React.useCallback(() => {
+    const selectedElement = radioRefs.current[activeIndex]
+    const container = containerRef.current
+
+    if (selectedElement && container) {
+      const containerRect = container.getBoundingClientRect()
+      const selectedRect = selectedElement.getBoundingClientRect()
+
+      const containerStyle = window.getComputedStyle(container)
+      const selectedStyle = window.getComputedStyle(selectedElement)
+
+      const containerPadding = {
+        left: parseFloat(containerStyle.paddingLeft),
+        top: parseFloat(containerStyle.paddingTop)
+      }
+      const containerBorder = {
+        left: parseFloat(containerStyle.borderLeftWidth),
+        top: parseFloat(containerStyle.borderTopWidth)
+      }
+      const selectedMargin = {
+        left: parseFloat(selectedStyle.marginLeft),
+        right: parseFloat(selectedStyle.marginRight),
+        top: parseFloat(selectedStyle.marginTop),
+        bottom: parseFloat(selectedStyle.marginBottom)
+      }
+
+      const translateX =
+        selectedRect.left -
+        containerRect.left -
+        containerPadding.left -
+        containerBorder.left -
+        (highlighterIncludeMargin ? selectedMargin.left : 0)
+
+      const translateY =
+        selectedRect.top -
+        containerRect.top -
+        containerPadding.top -
+        containerBorder.top -
+        selectedMargin.top
+
+      setHighlighterStyle({
+        height: selectedRect.height,
+        width:
+          selectedRect.width +
+          (highlighterIncludeMargin
+            ? selectedMargin.left + selectedMargin.right
+            : 0),
+        transform: `translate(${translateX}px, ${translateY}px)`
+      })
+    }
+  }, [activeIndex, highlighterIncludeMargin])
+
+  const handleChange = React.useCallback(
+    (index: number) => {
+      if (!memoizedOptions[index].disabled) {
         radioRefs.current[index]?.focus()
         setActiveIndex(index)
-        onChange?.(memoizedOptions[index].value)
-      },
-      [memoizedOptions, onChange]
-    )
+        onChange?.(
+          memoizedOptions[index].value as T extends OptionObject
+            ? T[keyof T]
+            : T
+        )
+      }
+    },
+    [memoizedOptions, onChange]
+  )
 
-    const goToNext = React.useCallback(() => {
-      const nextIndex = getNextOption(activeIndex)
-      handleChange(nextIndex)
-    }, [activeIndex, getNextOption, handleChange])
+  const goToNext = React.useCallback(() => {
+    const nextIndex = (activeIndex + 1) % options.length
+    handleChange(nextIndex)
+  }, [activeIndex, options.length, handleChange])
 
-    const goToPrevious = React.useCallback(() => {
-      const prevIndex = getPreviousOption(activeIndex)
-      handleChange(prevIndex)
-    }, [activeIndex, getPreviousOption, handleChange])
+  const goToPrevious = React.useCallback(() => {
+    const prevIndex = (activeIndex - 1 + options.length) % options.length
+    handleChange(prevIndex)
+  }, [activeIndex, options.length, handleChange])
 
-    React.useImperativeHandle(
-      ref,
-      () => containerRef.current as HTMLDivElement,
-      []
-    )
+  React.useEffect(() => {
+    updateToggle()
+  }, [updateToggle])
 
-    React.useEffect(() => {
-      updateToggle()
-    }, [updateToggle])
+  React.useEffect(() => {
+    const resizeObserver = new ResizeObserver(updateToggle)
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+    return () => resizeObserver.disconnect()
+  }, [updateToggle])
 
-    return (
-      <div
-        role="radiogroup"
-        aria-label="Fancy switch options"
-        {...props}
-        ref={containerRef}
-        onKeyDown={(e) => {
-          props.onKeyDown?.(e)
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Fancy switch options"
+      ref={containerRef}
+      onKeyDown={(e) => {
+        props.onKeyDown?.(e)
 
-          const currentIndex = radioRefs.current.findIndex(
-            (ref) => ref === document.activeElement
-          )
-          if (currentIndex === -1) return
-
-          if (!e.defaultPrevented) {
-            switch (e.key) {
-              case 'ArrowDown':
-              case 'ArrowRight':
-                e.preventDefault()
-                goToNext()
-                break
-              case 'ArrowUp':
-              case 'ArrowLeft':
-                e.preventDefault()
-                goToPrevious()
-                break
-              default:
-                break
-            }
+        if (!e.defaultPrevented) {
+          switch (e.key) {
+            case 'ArrowDown':
+            case 'ArrowRight':
+              e.preventDefault()
+              goToNext()
+              break
+            case 'ArrowUp':
+            case 'ArrowLeft':
+              e.preventDefault()
+              goToPrevious()
+              break
+            default:
+              break
           }
+        }
+      }}
+      {...props}
+    >
+      <div
+        className={highlighterClassName}
+        style={{
+          position: 'absolute',
+          transitionProperty: 'all',
+          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          transitionDuration: '300ms',
+          ...highlighterStyle,
+          ...customHighlighterStyle
+        }}
+        aria-hidden="true"
+        data-highlighter
+      />
+
+      {memoizedOptions.map((option, index) => (
+        <div
+          key={index}
+          ref={(el) => (radioRefs.current[index] = el)}
+          role="radio"
+          aria-checked={index === activeIndex}
+          tabIndex={index === activeIndex && !option.disabled ? 0 : -1}
+          onClick={() => handleChange(index)}
+          className={radioClassName}
+          {...(index === activeIndex ? { 'data-checked': true } : {})}
+          {...(option.disabled
+            ? { 'aria-disabled': true, 'data-disabled': true }
+            : {})}
+          aria-label={`${option.label} option`}
+        >
+          {option.label}
+        </div>
+      ))}
+
+      <div
+        aria-live="polite"
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          borderWidth: 0
         }}
       >
-        <div
-          className={highlighterClassName}
-          style={{
-            position: 'absolute',
-            transitionProperty: 'all',
-            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDuration: '300ms',
-            ...highlighterStyle,
-            ...customHighlighterStyle
-          }}
-          aria-hidden="true"
-          data-highlighter
-        />
-
-        {memoizedOptions.map((option, index) => (
-          <div
-            key={index}
-            ref={(el) => (radioRefs.current[index] = el)}
-            role="radio"
-            aria-checked={index === activeIndex}
-            tabIndex={index === activeIndex ? 0 : -1}
-            onClick={() => handleChange(index)}
-            className={radioClassName}
-            {...(index === activeIndex ? { 'data-checked': true } : {})}
-            aria-label={`${option.label} option`}
-          >
-            {option.label}
-          </div>
-        ))}
-
-        <div
-          aria-live="polite"
-          style={{
-            position: 'absolute',
-            width: '1px',
-            height: '1px',
-            padding: 0,
-            margin: '-1px',
-            overflow: 'hidden',
-            clip: 'rect(0, 0, 0, 0)',
-            whiteSpace: 'nowrap',
-            borderWidth: 0
-          }}
-        >
-          {memoizedOptions[activeIndex]?.label} selected
-        </div>
+        {memoizedOptions[activeIndex]?.label} selected
       </div>
-    )
-  }
-)
+    </div>
+  )
+}
 
 FancySwitch.displayName = 'FancySwitch'
 

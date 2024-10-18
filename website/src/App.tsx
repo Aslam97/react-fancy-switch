@@ -1,4 +1,3 @@
-import { OptionValue } from '@omit/react-fancy-switch'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -11,15 +10,15 @@ import {
   FormMessage
 } from '@/components/ui/form'
 import { cn } from './lib/utils'
-import { FancySwitch } from '@/components/custom/fancy-switch'
+import { FancySwitch } from '@omit/react-fancy-switch'
 import { useEffect } from 'react'
 
-const orderTypes: OptionValue[] = ['Delivery', 'Pickup', 'Shipping']
+const orderTypes = ['Delivery', 'Pickup', 'Shipping']
 const options = [
-  { label: 'Publish', value: 1, test: 'H' },
-  { label: 'Draft', value: 0, test: 'U' }
+  { label: 'Publish', value: 1, test: 'H', hentikan: false },
+  { label: 'Draft', value: 0, test: 'U', hentikan: true }
 ]
-const pets: { text: string; id: number }[] = [
+const pets = [
   { text: 'Car, (AKA Cat)', id: 1 },
   { text: 'Dog', id: 2 }
 ]
@@ -95,16 +94,17 @@ function App() {
                   <FormControl>
                     <FancySwitch
                       value={field.value}
-                      onChange={(value) =>
-                        form.setValue('orderType', String(value))
-                      }
+                      onChange={(value) => form.setValue('orderType', value)}
                       options={orderTypes}
                       data-testid="orderType"
                       className="flex rounded-full bg-muted p-2"
                       highlighterClassName="bg-primary rounded-full"
                       aria-label="Order type"
+                      disabledOptions={['Shipping']}
                       radioClassName={cn(
-                        'relative mx-2 flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground'
+                        'relative mx-2 flex h-9 cursor-pointer items-center justify-center',
+                        'rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground',
+                        'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50'
                       )}
                       highlighterIncludeMargin={true}
                     />
@@ -127,10 +127,13 @@ function App() {
                       value={field.value}
                       onChange={field.onChange}
                       options={options}
+                      disabledKey="hentikan"
                       className="rounded-xl bg-muted p-2"
                       highlighterClassName="bg-primary rounded-xl"
                       radioClassName={cn(
-                        'relative flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground'
+                        'relative flex h-9 cursor-pointer items-center justify-center',
+                        'rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground',
+                        'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50'
                       )}
                     />
                   </FormControl>
@@ -146,10 +149,7 @@ function App() {
                 <FormItem>
                   <FormLabel>
                     Pet:{' '}
-                    {
-                      pets.find((p) => p.id === Number(form.getValues('pet')))
-                        ?.text
-                    }
+                    {pets.find((p) => p.id === form.getValues('pet'))?.text}
                   </FormLabel>
                   <FormControl>
                     <FancySwitch
@@ -161,7 +161,9 @@ function App() {
                       className="rounded-3xl bg-muted p-2"
                       highlighterClassName="bg-primary rounded-full"
                       radioClassName={cn(
-                        'relative mx-2 flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground'
+                        'relative mx-2 flex h-9 cursor-pointer items-center justify-center',
+                        'rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground',
+                        'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50'
                       )}
                     />
                   </FormControl>
