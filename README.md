@@ -11,11 +11,11 @@
 
 # React Fancy Switch
 
-Simple React Fancy Switch Component without framer-motion. its customizable component that provides an elegant and interactive way to switch between multiple options. It's designed to be flexible, accessible, and easy to integrate into your React applications.
+React Fancy Switch is a customizable React component that provides an elegant and interactive way to switch between multiple options. It's designed to be flexible, accessible, and easy to integrate into your React applications, all without requiring framer-motion.
 
 ## Features
 
-- Supports both string and object-based options
+- Supports both primitive (string/number) and object-based options
 - Customizable styling for radio buttons and highlighter
 - Keyboard navigation support
 - Accessible design with proper ARIA attributes
@@ -33,7 +33,7 @@ npm install @omit/react-fancy-switch
 
 Here are examples of how to use the FancySwitch component with different types of option arrays:
 
-### 1. Array of Strings
+### 1. Array of Primitives (Strings or Numbers)
 
 ```jsx
 import React, { useState } from 'react'
@@ -117,23 +117,26 @@ const CustomObjectExample = () => {
 
 ### Props
 
-| Prop                       | Type                           | Default   | Description                                                      |
-| -------------------------- | ------------------------------ | --------- | ---------------------------------------------------------------- |
-| `options`                  | `OptionType[]`                 | Required  | An array of options to display. Can be strings or objects.       |
-| `value`                    | `OptionValue`                  | -         | The currently selected value.                                    |
-| `onChange`                 | `(value: OptionValue) => void` | -         | Callback function called when the selection changes.             |
-| `valueKey`                 | `string`                       | `'value'` | The key to use for the option's value when using object options. |
-| `labelKey`                 | `string`                       | `'label'` | The key to use for the option's label when using object options. |
-| `radioClassName`           | `string`                       | -         | CSS class name for the radio button elements.                    |
-| `highlighterClassName`     | `string`                       | -         | CSS class name for the highlighter element.                      |
-| `highlighterIncludeMargin` | `boolean`                      | `false`   | Whether to include margins in highlighter size calculations.     |
+| Prop                       | Type                           | Default      | Description                                                      |
+| -------------------------- | ------------------------------ | ------------ | ---------------------------------------------------------------- |
+| `options`                  | `OptionType[]`                 | Required     | An array of options to display. Can be primitives or objects.    |
+| `value`                    | `OptionValue`                  | -            | The currently selected value.                                    |
+| `onChange`                 | `(value: OptionValue) => void` | -            | Callback function called when the selection changes.             |
+| `valueKey`                 | `string`                       | `'value'`    | The key to use for the option's value when using object options. |
+| `labelKey`                 | `string`                       | `'label'`    | The key to use for the option's label when using object options. |
+| `disabledKey`              | `string`                       | `'disabled'` | The key to use for the option's disabled state (object options). |
+| `radioClassName`           | `string`                       | -            | CSS class name for the radio button elements.                    |
+| `highlighterClassName`     | `string`                       | -            | CSS class name for the highlighter element.                      |
+| `highlighterIncludeMargin` | `boolean`                      | `false`      | Whether to include margins in highlighter size calculations.     |
+| `highlighterStyle`         | `React.CSSProperties`          | -            | Custom styles for the highlighter element.                       |
+| `disabledOptions`          | `OptionValue[]`                | `[]`         | An array of values for options that should be disabled.          |
 
 Additional HTML attributes for the container div can be passed as props and will be spread onto the root element.
 
 ### Types
 
 ```typescript
-type OptionValue = string | number
+type OptionValue = string | number | boolean
 interface OptionObject {
   [key: string]: OptionValue
 }
@@ -142,22 +145,22 @@ type OptionType = OptionValue | OptionObject
 
 ## Styling
 
-The FancySwitch component provides CSS class hooks for styling:
+The FancySwitch component provides several ways to customize its appearance:
 
-- Use the `className` prop to style the container div.
-- Use the `radioClassName` prop to style individual radio button elements.
-- Use the `highlighterClassName` prop to style the moving highlighter element.
+1. Use the `className` prop to style the container div.
+2. Use the `radioClassName` prop to style individual radio buttons.
+3. Use the `highlighterClassName` prop to style the highlighter element.
+4. Use the `highlighterStyle` prop to apply custom inline styles to the highlighter.
 
 Example:
 
-```tsx
+```jsx
 <FancySwitch
   className="flex rounded-full bg-muted p-2"
   highlighterClassName="bg-primary rounded-full"
-  radioClassName={cn(
-    'relative mx-2 flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground'
-  )}
+  radioClassName="relative mx-2 flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground"
   highlighterIncludeMargin={true}
+  highlighterStyle={{ backgroundColor: 'blue', borderRadius: '8px' }}
 />
 ```
 
@@ -165,9 +168,56 @@ Example:
 
 FancySwitch is built with accessibility in mind:
 
-- Proper `role` and `aria-` attributes are used.
+- It uses proper ARIA attributes for screen readers.
 - Keyboard navigation is supported (arrow keys to move between options).
 - Focus management is handled automatically.
+- There's a visually hidden live region that announces the selected option.
+
+## Advanced Usage
+
+### Disabling Options
+
+You can disable specific options using the `disabledOptions` prop:
+
+```jsx
+<FancySwitch
+  options={options}
+  value={selectedOption}
+  onChange={setSelectedOption}
+  disabledOptions={['option2']}
+/>
+```
+
+## TypeScript Support
+
+FancySwitch is written in TypeScript and provides type definitions. The component is generic, allowing you to specify the type of your options:
+
+```typescript
+import FancySwitch from '@omit/react-fancy-switch'
+
+type MyOptionType = {
+  id: number
+  name: string
+  isDisabled: boolean
+}
+
+const options: MyOptionType[] = [
+  { id: 1, name: 'Option 1', isDisabled: false },
+  { id: 2, name: 'Option 2', isDisabled: true },
+  { id: 3, name: 'Option 3', isDisabled: false }
+]
+
+;<FancySwitch<MyOptionType>
+  options={options}
+  valueKey="id"
+  labelKey="name"
+  disabledKey="isDisabled"
+  value={selectedOption}
+  onChange={setSelectedOption}
+/>
+```
+
+This ensures type safety when working with custom option types.
 
 ## Other Projects
 
