@@ -158,10 +158,20 @@ function App() {
                       labelKey="text"
                       className="rounded-3xl bg-muted p-2"
                       highlighterClassName="bg-primary rounded-full"
-                      radioClassName={cn(
-                        'relative mx-2 flex h-9 cursor-pointer items-center justify-center',
-                        'rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground',
-                        'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50'
+                      renderOption={({ option, getOptionProps }) => (
+                        <div
+                          {...getOptionProps()}
+                          className={cn(
+                            'relative mx-2 flex h-9 cursor-pointer items-center justify-center',
+                            'rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground',
+                            'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
+                            'gap-1'
+                          )}
+                        >
+                          {option.value === 2 && '🐶'}
+                          {option.value === 1 && '🐈'}
+                          <span>{option.label}</span>
+                        </div>
                       )}
                     />
                   </FormControl>
