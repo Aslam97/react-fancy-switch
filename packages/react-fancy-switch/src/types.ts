@@ -3,7 +3,7 @@ import * as React from 'react'
 export type OptionValue = string | number | boolean
 
 export interface OptionObject {
-  [key: string]: OptionValue
+  [key: string]: OptionValue | string | number | boolean | undefined
 }
 
 export type OptionType = OptionValue | OptionObject
@@ -21,4 +21,11 @@ export interface FancySwitchProps<T extends OptionType>
   highlighterIncludeMargin?: boolean
   highlighterStyle?: React.CSSProperties
   disabledOptions?: Array<T extends OptionObject ? T[keyof T] : T>
+  renderOption?: (props: {
+    option: T extends OptionObject
+      ? T & { label: string; value: OptionValue; disabled: boolean }
+      : { label: string; value: T; disabled: boolean }
+    isSelected: boolean
+    getOptionProps: () => Record<string, any>
+  }) => React.ReactNode
 }

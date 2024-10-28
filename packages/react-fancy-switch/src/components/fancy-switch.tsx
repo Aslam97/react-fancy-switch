@@ -18,6 +18,7 @@ export function FancySwitch<T extends OptionType>({
   highlighterIncludeMargin = false,
   highlighterStyle: customHighlighterStyle,
   disabledOptions = [],
+  renderOption,
   ...props
 }: FancySwitchProps<T>) {
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -64,14 +65,21 @@ export function FancySwitch<T extends OptionType>({
   const memoizedOptions = React.useMemo(
     () =>
       options.map((option) => ({
+        ...(typeof option === 'object' ? option : {}),
         label: getOptionLabel(option),
         value: getOptionValue(option),
         disabled: isOptionDisabled(option)
-      })),
+      })) as Array<
+        T extends OptionObject
+          ? T & { label: string; value: OptionValue; disabled: boolean }
+          : { label: string; value: T; disabled: boolean }
+      >,
     [options, getOptionValue, getOptionLabel, isOptionDisabled]
   )
 
   const [activeIndex, setActiveIndex] = React.useState(() => {
+    if (value === undefined) return 0
+
     const index = memoizedOptions.findIndex((option) => option.value === value)
     if (index === -1) {
       console.warn(
@@ -81,15 +89,6 @@ export function FancySwitch<T extends OptionType>({
     }
     return index
   })
-
-  React.useEffect(() => {
-    const newIndex = memoizedOptions.findIndex(
-      (option) => option.value === value
-    )
-    if (newIndex !== -1 && newIndex !== activeIndex) {
-      setActiveIndex(newIndex)
-    }
-  }, [value, memoizedOptions, activeIndex])
 
   const [highlighterStyle, setHighlighterStyle] = React.useState({
     height: 0,
@@ -164,15 +163,50 @@ export function FancySwitch<T extends OptionType>({
     [memoizedOptions, onChange]
   )
 
-  const goToNext = React.useCallback(() => {
-    const nextIndex = (activeIndex + 1) % options.length
-    handleChange(nextIndex)
-  }, [activeIndex, options.length, handleChange])
+  const renderOptionContent = React.useCallback(
+    (option: (typeof memoizedOptions)[0], index: number) => {
+      const isSelected = index === activeIndex
 
-  const goToPrevious = React.useCallback(() => {
-    const prevIndex = (activeIndex - 1 + options.length) % options.length
-    handleChange(prevIndex)
-  }, [activeIndex, options.length, handleChange])
+      if (renderOption) {
+        return renderOption({
+          option,
+          isSelected,
+          getOptionProps: () => ({
+            ref: (el: HTMLDivElement | null) => (radioRefs.current[index] = el),
+            role: 'radio',
+            'aria-checked': isSelected,
+            tabIndex: isSelected && !option.disabled ? 0 : -1,
+            onClick: () => handleChange(index),
+            className: radioClassName,
+            ...(isSelected ? { 'data-checked': true } : {}),
+            ...(option.disabled
+              ? { 'aria-disabled': true, 'data-disabled': true }
+              : {}),
+            'aria-label': `${option.label} option`
+          })
+        })
+      }
+
+      return (
+        <div
+          ref={(el) => (radioRefs.current[index] = el)}
+          role="radio"
+          aria-checked={isSelected}
+          tabIndex={isSelected && !option.disabled ? 0 : -1}
+          onClick={() => handleChange(index)}
+          className={radioClassName}
+          {...(isSelected ? { 'data-checked': true } : {})}
+          {...(option.disabled
+            ? { 'aria-disabled': true, 'data-disabled': true }
+            : {})}
+          aria-label={`${option.label} option`}
+        >
+          {option.label}
+        </div>
+      )
+    },
+    [activeIndex, renderOption, radioClassName, handleChange]
+  )
 
   React.useEffect(() => {
     updateToggle()
@@ -185,6 +219,15 @@ export function FancySwitch<T extends OptionType>({
     }
     return () => resizeObserver.disconnect()
   }, [updateToggle])
+
+  React.useEffect(() => {
+    const newIndex = memoizedOptions.findIndex(
+      (option) => option.value === value
+    )
+    if (newIndex !== -1 && newIndex !== activeIndex) {
+      setActiveIndex(newIndex)
+    }
+  }, [value, memoizedOptions, activeIndex])
 
   return (
     <div
@@ -199,12 +242,15 @@ export function FancySwitch<T extends OptionType>({
             case 'ArrowDown':
             case 'ArrowRight':
               e.preventDefault()
-              goToNext()
+              const nextIndex = (activeIndex + 1) % options.length
+              handleChange(nextIndex)
               break
             case 'ArrowUp':
             case 'ArrowLeft':
               e.preventDefault()
-              goToPrevious()
+              const prevIndex =
+                (activeIndex - 1 + options.length) % options.length
+              handleChange(prevIndex)
               break
             default:
               break
@@ -228,22 +274,9 @@ export function FancySwitch<T extends OptionType>({
       />
 
       {memoizedOptions.map((option, index) => (
-        <div
-          key={index}
-          ref={(el) => (radioRefs.current[index] = el)}
-          role="radio"
-          aria-checked={index === activeIndex}
-          tabIndex={index === activeIndex && !option.disabled ? 0 : -1}
-          onClick={() => handleChange(index)}
-          className={radioClassName}
-          {...(index === activeIndex ? { 'data-checked': true } : {})}
-          {...(option.disabled
-            ? { 'aria-disabled': true, 'data-disabled': true }
-            : {})}
-          aria-label={`${option.label} option`}
-        >
-          {option.label}
-        </div>
+        <React.Fragment key={option.value.toString()}>
+          {renderOptionContent(option, index)}
+        </React.Fragment>
       ))}
 
       <div
