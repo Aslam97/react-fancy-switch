@@ -12,6 +12,6 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "turbo": "^2.1.3"
+    "turbo": "^2.2.3"
   }
 }
