@@ -3,7 +3,7 @@ import * as React from 'react'
 export type OptionValue = string | number | boolean
 
 export interface OptionObject {
-  [key: string]: OptionValue | string | number | boolean | undefined
+  [key: string]: OptionValue | undefined
 }
 
 export type OptionType = OptionValue | OptionObject
