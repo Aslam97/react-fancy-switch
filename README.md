@@ -13,6 +13,9 @@
 
 React Fancy Switch is a customizable React component that provides an elegant and interactive way to switch between multiple options. It's designed to be flexible, accessible, and easy to integrate into your React applications, all without requiring framer-motion.
 
+> **Note**: There are currently no online previews or demos available for this project.  
+> In the meantime, please clone the repository and try it out locally.
+
 ## Features
 
 - Supports both primitive (string/number/boolean) and object-based options
