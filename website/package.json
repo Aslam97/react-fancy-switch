@@ -12,8 +12,8 @@
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@omit/react-fancy-switch": "workspace:*",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
     "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
