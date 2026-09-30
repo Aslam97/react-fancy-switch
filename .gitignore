@@ -38,3 +38,8 @@ yarn-error.log*
 *.pem
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Test artifacts
+test-results
+playwright-report
+.vitest
