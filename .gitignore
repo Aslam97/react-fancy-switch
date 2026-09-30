@@ -36,3 +36,10 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Test artifacts
+test-results
+playwright-report
+.vitest

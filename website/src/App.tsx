@@ -1,6 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { FancySwitch } from '@omit/react-fancy-switch'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -9,12 +12,10 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form'
-import { cn } from './lib/utils'
-import { FancySwitch } from '@omit/react-fancy-switch'
-import { useEffect } from 'react'
+import { cn } from '@/lib/utils'
 
 const orderTypes = ['Delivery', 'Pickup', 'Shipping']
-const options = [
+const publishOptions = [
   { label: 'Publish', value: 1, test: 'H' },
   { label: 'Draft', value: 0, test: 'U' }
 ]
@@ -23,20 +24,28 @@ const pets = [
   { text: 'Dog', id: 2 }
 ]
 
-const FormSchema = z.object({
-  isPublished: z.coerce.number(),
-  orderType: z.string().min(1, {
-    message: 'Order type is required'
-  }),
-  option: z.string().min(1, {
-    message: 'Option is required'
-  }),
-  pet: z.coerce.number()
+const formSchema = z.object({
+  isPublished: z.number(),
+  orderType: z.string().min(1, { error: 'Order type is required' }),
+  pet: z.number()
 })
 
+type FormValues = z.infer<typeof formSchema>
+
+const radioClassName = cn(
+  'relative flex h-9 cursor-pointer items-center justify-center rounded-full px-3.5',
+  'text-sm font-medium transition-colors focus:outline-hidden',
+  'data-checked:text-primary-foreground',
+  'data-disabled:cursor-not-allowed data-disabled:opacity-50'
+)
+
 function App() {
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const [submittedValues, setSubmittedValues] = useState<FormValues | null>(
+    null
+  )
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       orderType: 'Pickup',
       isPublished: 0,
@@ -44,35 +53,20 @@ function App() {
     }
   })
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    console.log(data)
-  }
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        console.log('ArrowUp/ArrowDown')
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
   return (
-    <div className="flex min-h-screen place-items-center justify-center p-4">
-      <div className="mx-auto max-w-4xl">
+    <main className="flex min-h-screen place-items-center justify-center p-4">
+      <div className="mx-auto w-full max-w-4xl">
         <div className="text-center">
           <h1 className="text-xl font-bold tracking-tight sm:text-3xl">
             Fancy Switch
           </h1>
           <div className="mt-4 flex justify-center">
-            <div className="relative rounded-full px-3 py-1 text-sm leading-6 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
+            <div className="relative rounded-full px-3 py-1 text-sm leading-6 ring-1 ring-foreground/10 hover:ring-foreground/20">
               <a
-                href="https://github.com/Aslam97/shadcn-fancy-switch"
+                href="https://github.com/Aslam97/react-fancy-switch"
                 className="font-semibold text-primary"
               >
-                View on Github <span aria-hidden="true">→</span>
+                View on GitHub <span aria-hidden="true">→</span>
               </a>
             </div>
           </div>
@@ -80,7 +74,7 @@ function App() {
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(setSubmittedValues)}
             className="mt-6 space-y-6"
           >
             <FormField
@@ -88,24 +82,17 @@ function App() {
               name="orderType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Order type: {form.getValues('orderType')}
-                  </FormLabel>
+                  <FormLabel>Order type: {field.value}</FormLabel>
                   <FormControl>
                     <FancySwitch
                       value={field.value}
-                      onChange={(value) => form.setValue('orderType', value)}
+                      onChange={field.onChange}
                       options={orderTypes}
-                      data-testid="orderType"
+                      aria-label="Order type"
                       className="flex rounded-full bg-muted p-2"
                       highlighterClassName="bg-primary rounded-full"
-                      aria-label="Order type"
-                      radioClassName={cn(
-                        'relative mx-2 flex h-9 cursor-pointer items-center justify-center',
-                        'rounded-full px-3.5 text-sm font-medium transition-colors focus:outline-none data-[checked]:text-primary-foreground',
-                        'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50'
-                      )}
-                      highlighterIncludeMargin={true}
+                      radioClassName={cn(radioClassName, 'mx-2')}
+                      highlighterIncludeMargin
                     />
                   </FormControl>
                   <FormMessage />
@@ -118,21 +105,16 @@ function App() {
               name="isPublished"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Is published: {form.getValues('isPublished')}
-                  </FormLabel>
+                  <FormLabel>Is published: {field.value}</FormLabel>
                   <FormControl>
                     <FancySwitch
                       value={field.value}
                       onChange={field.onChange}
-                      options={options}
+                      options={publishOptions}
+                      aria-label="Is published"
                       className="rounded-xl bg-muted p-2"
                       highlighterClassName="bg-primary rounded-xl"
-                      radioClassName={cn(
-                        'relative flex h-9 cursor-pointer items-center justify-center',
-                        'rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground',
-                        'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50'
-                      )}
+                      radioClassName={radioClassName}
                     />
                   </FormControl>
                   <FormMessage />
@@ -146,8 +128,7 @@ function App() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Pet:{' '}
-                    {pets.find((p) => p.id === form.getValues('pet'))?.text}
+                    Pet: {pets.find((pet) => pet.id === field.value)?.text}
                   </FormLabel>
                   <FormControl>
                     <FancySwitch
@@ -156,17 +137,13 @@ function App() {
                       options={pets}
                       valueKey="id"
                       labelKey="text"
+                      aria-label="Pet"
                       className="rounded-3xl bg-muted p-2"
                       highlighterClassName="bg-primary rounded-full"
                       renderOption={({ option, getOptionProps }) => (
                         <div
                           {...getOptionProps()}
-                          className={cn(
-                            'relative mx-2 flex h-9 cursor-pointer items-center justify-center',
-                            'rounded-full px-3.5 text-sm font-medium transition-colors data-[checked]:text-primary-foreground',
-                            'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
-                            'gap-1'
-                          )}
+                          className={cn(radioClassName, 'mx-2 gap-1')}
                         >
                           {option.value === 2 && '🐶'}
                           {option.value === 1 && '🐈'}
@@ -179,10 +156,27 @@ function App() {
                 </FormItem>
               )}
             />
+
+            <Button type="submit">Submit</Button>
           </form>
         </Form>
+
+        {submittedValues && (
+          <section
+            aria-live="polite"
+            className="mt-6 rounded-xl bg-muted p-4 text-left"
+          >
+            <h2 className="text-sm font-medium">Submitted values</h2>
+            <pre
+              className="mt-2 overflow-x-auto text-sm"
+              data-testid="submitted-values"
+            >
+              {JSON.stringify(submittedValues, null, 2)}
+            </pre>
+          </section>
+        )}
       </div>
-    </div>
+    </main>
   )
 }
 

@@ -1,28 +1,32 @@
-import { defineConfig } from 'vite'
+import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
-import dts from 'vite-plugin-dts'
-import { resolve } from 'path'
+import dts from 'unplugin-dts/vite'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [react(), dts()],
+  plugins: [
+    react(),
+    dts({
+      tsconfigPath: './tsconfig.app.json',
+      exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**'],
+      // Emit one declaration entry per module format so that both ESM
+      // (`import`) and CommonJS (`require`) consumers get correct types.
+      outDirs: [{ dir: 'dist' }, { dir: 'dist', moduleFormat: 'cjs' }],
+      bundleTypes: true
+    })
+  ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'ReactFancySwitch',
-      fileName: 'react-fancy-switch'
+      entry: resolve(import.meta.dirname, 'src/index.ts'),
+      fileName: 'react-fancy-switch',
+      formats: ['es', 'cjs']
     },
-    rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+    rolldownOptions: {
+      external: ['react', 'react/jsx-runtime'],
       output: {
-        exports: 'named',
-        globals: {
-          react: 'React',
-          'react-dom': 'React-dom',
-          'react/jsx-runtime': 'react/jsx-runtime'
-        }
+        exports: 'named'
       }
     },
-    sourcemap: true,
-    emptyOutDir: true
+    sourcemap: true
   }
 })

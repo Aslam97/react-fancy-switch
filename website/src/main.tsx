@@ -1,21 +1,17 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-import { Analytics } from '@vercel/analytics/react'
-import { ThemeProvider as NextThemesProvider } from 'next-themes'
-import { type ThemeProviderProps } from 'next-themes/dist/types'
-
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  throw new Error('Root element "#root" was not found in the document.')
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
-      <App />
-      <Analytics />
-    </NextThemesProvider>
-  </React.StrictMode>
+createRoot(rootElement).render(
+  <StrictMode>
+    <App />
+    {__VERCEL_DEPLOYMENT__ && <Analytics />}
+  </StrictMode>
 )

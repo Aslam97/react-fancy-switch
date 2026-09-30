@@ -1,10 +1,58 @@
 import * as React from 'react'
-import {
+import type {
   FancySwitchProps,
   OptionObject,
+  OptionProps,
   OptionType,
-  OptionValue
+  OptionValue,
+  OptionValueOf,
+  ResolvedOption
 } from '../types'
+
+const EMPTY_DISABLED_OPTIONS: never[] = []
+
+const DEFAULT_GROUP_LABEL = 'Fancy switch options'
+
+// Layout measurements must run before paint so the highlighter never
+// animates from its initial (empty) size. `useLayoutEffect` is a no-op on
+// the server, so fall back to `useEffect` there.
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
+
+interface HighlighterStyle {
+  height: number
+  width: number
+  transform: string
+}
+
+const INITIAL_HIGHLIGHTER_STYLE: HighlighterStyle = {
+  height: 0,
+  width: 0,
+  transform: 'translate(0px, 0px)'
+}
+
+function parsePx(value: string): number {
+  const parsed = parseFloat(value)
+  return Number.isNaN(parsed) ? 0 : parsed
+}
+
+/**
+ * Returns the index of the first enabled option reached by stepping
+ * `direction` from `fromIndex` (wrapping around), or -1 when no enabled
+ * option exists.
+ */
+function findEnabledIndex(
+  options: ReadonlyArray<{ disabled: boolean }>,
+  fromIndex: number,
+  direction: 1 | -1
+): number {
+  const count = options.length
+  for (let step = 1; step <= count; step++) {
+    const index = (fromIndex + direction * step + count * step) % count
+    if (!options[index].disabled) return index
+  }
+  return -1
+}
 
 export function FancySwitch<T extends OptionType>({
   options,
@@ -17,19 +65,24 @@ export function FancySwitch<T extends OptionType>({
   highlighterClassName,
   highlighterIncludeMargin = false,
   highlighterStyle: customHighlighterStyle,
-  disabledOptions = [],
+  disabledOptions = EMPTY_DISABLED_OPTIONS,
   renderOption,
+  onKeyDown,
+  style,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...props
 }: FancySwitchProps<T>) {
   const containerRef = React.useRef<HTMLDivElement>(null)
+  const highlighterRef = React.useRef<HTMLDivElement>(null)
   const radioRefs = React.useRef<(HTMLDivElement | null)[]>([])
 
   const getOptionValue = React.useCallback(
-    (option: T): OptionValue => {
+    (option: T): OptionValue | undefined => {
       if (typeof option !== 'object') {
         return option
       }
-      return option[valueKey] as OptionValue
+      return (option as OptionObject)[valueKey]
     },
     [valueKey]
   )
@@ -39,230 +92,265 @@ export function FancySwitch<T extends OptionType>({
       if (typeof option !== 'object') {
         return String(option)
       }
-      return String(option[labelKey])
+      return String(
+        (option as OptionObject)[labelKey] ?? getOptionValue(option) ?? ''
+      )
     },
-    [labelKey]
+    [labelKey, getOptionValue]
   )
 
   const isOptionDisabled = React.useCallback(
     (option: T): boolean => {
       const optionValue = getOptionValue(option)
       if (
-        disabledOptions.includes(
-          optionValue as T extends OptionObject ? T[keyof T] : T
+        optionValue !== undefined &&
+        (disabledOptions as ReadonlyArray<OptionValue | undefined>).includes(
+          optionValue
         )
       ) {
         return true
       }
       if (typeof option === 'object' && disabledKey in option) {
-        return Boolean(option[disabledKey])
+        return Boolean((option as OptionObject)[disabledKey])
       }
       return false
     },
     [disabledOptions, getOptionValue, disabledKey]
   )
 
-  const memoizedOptions = React.useMemo(
+  const resolvedOptions = React.useMemo(
     () =>
       options.map((option) => ({
         ...(typeof option === 'object' ? option : {}),
         label: getOptionLabel(option),
         value: getOptionValue(option),
         disabled: isOptionDisabled(option)
-      })) as Array<
-        T extends OptionObject
-          ? T & { label: string; value: OptionValue; disabled: boolean }
-          : { label: string; value: T; disabled: boolean }
-      >,
+      })) as Array<ResolvedOption<T>>,
     [options, getOptionValue, getOptionLabel, isOptionDisabled]
   )
 
-  const [activeIndex, setActiveIndex] = React.useState(() => {
-    if (value === undefined) return 0
+  const isControlled = value !== undefined
 
-    const index = memoizedOptions.findIndex((option) => option.value === value)
-    if (index === -1) {
+  // Index of the option matching the controlled `value`, or -1.
+  const controlledIndex = React.useMemo(
+    () =>
+      isControlled
+        ? resolvedOptions.findIndex((option) => option.value === value)
+        : -1,
+    [isControlled, resolvedOptions, value]
+  )
+
+  const [internalIndex, setInternalIndex] = React.useState(() =>
+    controlledIndex === -1 ? 0 : controlledIndex
+  )
+
+  React.useEffect(() => {
+    if (isControlled && controlledIndex === -1) {
       console.warn(
-        `FancySwitch: No option found for value "${value}". Defaulting to first option.`
+        `FancySwitch: No option found for value "${String(value)}". Defaulting to first option.`
       )
-      return 0
     }
-    return index
-  })
+  }, [isControlled, controlledIndex, value])
 
-  const [highlighterStyle, setHighlighterStyle] = React.useState({
-    height: 0,
-    width: 0,
-    transform: 'translate(0, 0)'
-  })
+  // Unknown controlled values and internal indexes that no longer exist
+  // (options were removed) both fall back to the first option.
+  const optionCount = resolvedOptions.length
+  const activeIndex =
+    optionCount === 0
+      ? -1
+      : isControlled
+        ? Math.max(controlledIndex, 0)
+        : internalIndex < optionCount
+          ? internalIndex
+          : 0
 
-  const updateToggle = React.useCallback(() => {
-    const selectedElement = radioRefs.current[activeIndex]
+  // Roving tabindex: exactly one option is reachable with Tab. That is the
+  // selected option, unless it is disabled, in which case the first enabled
+  // option becomes the tab stop (matching native radio groups).
+  const tabStopIndex =
+    activeIndex !== -1 && !resolvedOptions[activeIndex].disabled
+      ? activeIndex
+      : resolvedOptions.findIndex((option) => !option.disabled)
+
+  const [highlighterStyle, setHighlighterStyle] =
+    React.useState<HighlighterStyle>(INITIAL_HIGHLIGHTER_STYLE)
+
+  const updateHighlighter = React.useCallback(() => {
     const container = containerRef.current
+    const selectedElement =
+      activeIndex === -1 ? null : radioRefs.current[activeIndex]
 
-    if (selectedElement && container) {
-      const containerRect = container.getBoundingClientRect()
-      const selectedRect = selectedElement.getBoundingClientRect()
-
-      const containerStyle = window.getComputedStyle(container)
-      const selectedStyle = window.getComputedStyle(selectedElement)
-
-      const containerPadding = {
-        left: parseFloat(containerStyle.paddingLeft),
-        top: parseFloat(containerStyle.paddingTop)
-      }
-      const containerBorder = {
-        left: parseFloat(containerStyle.borderLeftWidth),
-        top: parseFloat(containerStyle.borderTopWidth)
-      }
-      const selectedMargin = {
-        left: parseFloat(selectedStyle.marginLeft),
-        right: parseFloat(selectedStyle.marginRight),
-        top: parseFloat(selectedStyle.marginTop),
-        bottom: parseFloat(selectedStyle.marginBottom)
-      }
-
-      const translateX =
-        selectedRect.left -
-        containerRect.left -
-        containerPadding.left -
-        containerBorder.left -
-        (highlighterIncludeMargin ? selectedMargin.left : 0)
-
-      const translateY =
-        selectedRect.top -
-        containerRect.top -
-        containerPadding.top -
-        containerBorder.top -
-        selectedMargin.top
-
-      setHighlighterStyle({
-        height: selectedRect.height,
-        width:
-          selectedRect.width +
-          (highlighterIncludeMargin
-            ? selectedMargin.left + selectedMargin.right
-            : 0),
-        transform: `translate(${translateX}px, ${translateY}px)`
-      })
+    if (!container || !selectedElement) {
+      setHighlighterStyle(INITIAL_HIGHLIGHTER_STYLE)
+      return
     }
+
+    const containerRect = container.getBoundingClientRect()
+    const selectedRect = selectedElement.getBoundingClientRect()
+    const containerStyle = window.getComputedStyle(container)
+    const selectedStyle = window.getComputedStyle(selectedElement)
+
+    // The highlighter is absolutely positioned at the top-left corner of the
+    // container's padding box, so only the container border has to be
+    // subtracted from the viewport-relative coordinates.
+    const containerBorder = {
+      left: parsePx(containerStyle.borderLeftWidth),
+      top: parsePx(containerStyle.borderTopWidth)
+    }
+    const margin = highlighterIncludeMargin
+      ? {
+          left: parsePx(selectedStyle.marginLeft),
+          right: parsePx(selectedStyle.marginRight),
+          top: parsePx(selectedStyle.marginTop),
+          bottom: parsePx(selectedStyle.marginBottom)
+        }
+      : { left: 0, right: 0, top: 0, bottom: 0 }
+
+    const translateX =
+      selectedRect.left -
+      containerRect.left -
+      containerBorder.left -
+      margin.left
+    const translateY =
+      selectedRect.top - containerRect.top - containerBorder.top - margin.top
+
+    setHighlighterStyle({
+      height: selectedRect.height + margin.top + margin.bottom,
+      width: selectedRect.width + margin.left + margin.right,
+      transform: `translate(${translateX}px, ${translateY}px)`
+    })
   }, [activeIndex, highlighterIncludeMargin])
 
-  const handleChange = React.useCallback(
-    (index: number) => {
-      if (!memoizedOptions[index].disabled) {
-        radioRefs.current[index]?.focus()
-        setActiveIndex(index)
-        onChange?.(
-          memoizedOptions[index].value as T extends OptionObject
-            ? T[keyof T]
-            : T
-        )
-      }
-    },
-    [memoizedOptions, onChange]
-  )
+  // Re-measure whenever the selection or the options change.
+  useIsomorphicLayoutEffect(() => {
+    updateHighlighter()
+  }, [updateHighlighter, resolvedOptions])
 
-  const renderOptionContent = React.useCallback(
-    (option: (typeof memoizedOptions)[0], index: number) => {
-      const isSelected = index === activeIndex
-
-      if (renderOption) {
-        return renderOption({
-          option,
-          isSelected,
-          getOptionProps: () => ({
-            ref: (el: HTMLDivElement | null) => (radioRefs.current[index] = el),
-            role: 'radio',
-            'aria-checked': isSelected,
-            tabIndex: isSelected && !option.disabled ? 0 : -1,
-            onClick: () => handleChange(index),
-            className: radioClassName,
-            ...(isSelected ? { 'data-checked': true } : {}),
-            ...(option.disabled
-              ? { 'aria-disabled': true, 'data-disabled': true }
-              : {}),
-            'aria-label': `${option.label} option`
-          })
-        })
-      }
-
-      return (
-        <div
-          ref={(el) => (radioRefs.current[index] = el)}
-          role="radio"
-          aria-checked={isSelected}
-          tabIndex={isSelected && !option.disabled ? 0 : -1}
-          onClick={() => handleChange(index)}
-          className={radioClassName}
-          {...(isSelected ? { 'data-checked': true } : {})}
-          {...(option.disabled
-            ? { 'aria-disabled': true, 'data-disabled': true }
-            : {})}
-          aria-label={`${option.label} option`}
-        >
-          {option.label}
-        </div>
-      )
-    },
-    [activeIndex, renderOption, radioClassName, handleChange]
-  )
-
+  // Re-measure whenever the container or any option changes size (fonts
+  // loading, responsive layouts, label changes, ...).
   React.useEffect(() => {
-    updateToggle()
-  }, [updateToggle])
+    if (typeof ResizeObserver === 'undefined') return
 
-  React.useEffect(() => {
-    const resizeObserver = new ResizeObserver(updateToggle)
+    const resizeObserver = new ResizeObserver(updateHighlighter)
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current)
     }
-    return () => resizeObserver.disconnect()
-  }, [updateToggle])
-
-  React.useEffect(() => {
-    const newIndex = memoizedOptions.findIndex(
-      (option) => option.value === value
-    )
-    if (newIndex !== -1 && newIndex !== activeIndex) {
-      setActiveIndex(newIndex)
+    for (const element of radioRefs.current) {
+      if (element) resizeObserver.observe(element)
     }
-  }, [value, memoizedOptions, activeIndex])
+    return () => resizeObserver.disconnect()
+  }, [updateHighlighter, resolvedOptions])
+
+  const handleChange = React.useCallback(
+    (index: number) => {
+      const option = resolvedOptions[index]
+      if (!option || option.disabled) return
+
+      radioRefs.current[index]?.focus()
+      setInternalIndex(index)
+      onChange?.(option.value as OptionValueOf<T>)
+    },
+    [resolvedOptions, onChange]
+  )
+
+  const getNextIndex = (
+    key: string,
+    currentIndex: number
+  ): number | undefined => {
+    switch (key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        return findEnabledIndex(resolvedOptions, currentIndex, 1)
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        return findEnabledIndex(resolvedOptions, currentIndex, -1)
+      case 'Home':
+        return findEnabledIndex(resolvedOptions, -1, 1)
+      case 'End':
+        return findEnabledIndex(resolvedOptions, optionCount, -1)
+      case ' ':
+        return currentIndex
+      default:
+        return undefined
+    }
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(event)
+    if (event.defaultPrevented || optionCount === 0) return
+
+    // Navigate relative to the focused option (which may differ from the
+    // selected one when the selected option is disabled).
+    const target = event.target instanceof Node ? event.target : null
+    const focusedIndex = radioRefs.current.findIndex(
+      (element) => element != null && element.contains(target)
+    )
+    const currentIndex = focusedIndex === -1 ? activeIndex : focusedIndex
+
+    const nextIndex = getNextIndex(event.key, currentIndex)
+    if (nextIndex === undefined) return
+
+    event.preventDefault()
+    if (nextIndex !== -1) {
+      handleChange(nextIndex)
+    }
+  }
+
+  const getOptionProps = (
+    option: ResolvedOption<T>,
+    index: number,
+    isSelected: boolean
+  ): OptionProps => ({
+    ref: (element) => {
+      radioRefs.current[index] = element
+    },
+    role: 'radio',
+    'aria-checked': isSelected,
+    tabIndex: index === tabStopIndex ? 0 : -1,
+    onClick: () => handleChange(index),
+    className: radioClassName,
+    ...(isSelected ? { 'data-checked': true as const } : {}),
+    ...(option.disabled
+      ? { 'aria-disabled': true as const, 'data-disabled': true as const }
+      : {}),
+    'aria-label': `${option.label} option`
+  })
+
+  const renderOptionContent = (option: ResolvedOption<T>, index: number) => {
+    const isSelected = index === activeIndex
+
+    if (renderOption) {
+      return renderOption({
+        option,
+        isSelected,
+        getOptionProps: () => getOptionProps(option, index, isSelected)
+      })
+    }
+
+    return (
+      <div {...getOptionProps(option, index, isSelected)}>{option.label}</div>
+    )
+  }
 
   return (
     <div
       role="radiogroup"
-      aria-label="Fancy switch options"
-      ref={containerRef}
-      onKeyDown={(e) => {
-        props.onKeyDown?.(e)
-
-        if (!e.defaultPrevented) {
-          switch (e.key) {
-            case 'ArrowDown':
-            case 'ArrowRight':
-              e.preventDefault()
-              const nextIndex = (activeIndex + 1) % options.length
-              handleChange(nextIndex)
-              break
-            case 'ArrowUp':
-            case 'ArrowLeft':
-              e.preventDefault()
-              const prevIndex =
-                (activeIndex - 1 + options.length) % options.length
-              handleChange(prevIndex)
-              break
-            default:
-              break
-          }
-        }
-      }}
+      aria-label={
+        ariaLabel ?? (ariaLabelledBy ? undefined : DEFAULT_GROUP_LABEL)
+      }
+      aria-labelledby={ariaLabelledBy}
       {...props}
+      ref={containerRef}
+      style={{ position: 'relative', ...style }}
+      onKeyDown={handleKeyDown}
     >
       <div
+        ref={highlighterRef}
         className={highlighterClassName}
         style={{
           position: 'absolute',
+          top: 0,
+          left: 0,
           transitionProperty: 'all',
           transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
           transitionDuration: '300ms',
@@ -273,8 +361,8 @@ export function FancySwitch<T extends OptionType>({
         data-highlighter
       />
 
-      {memoizedOptions.map((option, index) => (
-        <React.Fragment key={option.value.toString()}>
+      {resolvedOptions.map((option, index) => (
+        <React.Fragment key={index}>
           {renderOptionContent(option, index)}
         </React.Fragment>
       ))}
@@ -293,7 +381,9 @@ export function FancySwitch<T extends OptionType>({
           borderWidth: 0
         }}
       >
-        {memoizedOptions[activeIndex]?.label} selected
+        {activeIndex === -1
+          ? null
+          : `${resolvedOptions[activeIndex].label} selected`}
       </div>
     </div>
   )
