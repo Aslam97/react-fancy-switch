@@ -1,6 +1,6 @@
 # Website
 
-Demo site for [`@omit/react-fancy-switch`](../packages/react-fancy-switch), built with Vite, React, Tailwind CSS v4 and react-hook-form.
+Demo site for [`@omit/react-fancy-switch`](../packages/react-fancy-switch), built with Vite, React, Tailwind CSS v4 and react-hook-form. It is deployed to Netlify at https://react-fancy-switch.netlify.app, and every pull request gets a deploy preview.
 
 ## Scripts
 

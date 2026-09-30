@@ -1,4 +1,4 @@
-<a href="https://github.com/Aslam97/react-fancy-switch">
+<a href="https://react-fancy-switch.netlify.app">
   <img src="https://i.postimg.cc/59Bc5bR5/Screenshot-2024-08-13-at-16-33-21.png" alt="React Fancy Switch" />
 </a>
 
@@ -19,7 +19,7 @@ npm install @omit/react-fancy-switch
 
 **Documentation:** see the package README at [`packages/react-fancy-switch`](packages/react-fancy-switch/README.md) (also shown on [npm](https://www.npmjs.com/package/@omit/react-fancy-switch)).
 
-> **Note**: there is currently no hosted demo. Clone the repository and run the demo site locally (see below).
+**Live demo:** https://react-fancy-switch.netlify.app (deployed from `website/`; pull requests get a Netlify deploy preview).
 
 ## Repository layout
 
